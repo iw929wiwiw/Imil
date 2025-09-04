@@ -8,7 +8,7 @@ local character = player.Character or player.CharacterAdded:Wait()
 local humanoid = character:WaitForChild("Humanoid")
 local hrp = character:WaitForChild("HumanoidRootPart")
 
-local SPEED = 43.8
+local SPEED = 43.6
 local SMOOTHNESS = 0.30 -- higher = smoother, less rubberband risk
 
 -- Smooth velocity speed boost
