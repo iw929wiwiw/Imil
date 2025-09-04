@@ -10,7 +10,7 @@ local hrp = character:WaitForChild("HumanoidRootPart")
 
 -- CONFIG
 local BASE_SPEED = 33
-local MAX_SPEED = 45.3
+local MAX_SPEED = 45
 local SPEED = BASE_SPEED
 local RAMP_DELAY = 0.15 -- ramp-up step delay
 local SMOOTHNESS = 0.35 -- higher = smoother (safer)
