@@ -11,11 +11,23 @@ local hrp = character:WaitForChild("HumanoidRootPart")
 local SPEED = 44
 local SMOOTHNESS = 0.30 -- higher = smoother, less rubberband risk
 
--- Smooth velocity speed boost (manual walking only)
+-- Smooth velocity speed boost
 RunService.Heartbeat:Connect(function()
-    if humanoid and hrp and humanoid.MoveDirection.Magnitude > 0.01 then
-        local moveDir = humanoid.MoveDirection.Unit
-        local targetVel = Vector3.new(moveDir.X * SPEED, hrp.Velocity.Y, moveDir.Z * SPEED)
-        hrp.Velocity = hrp.Velocity:Lerp(targetVel, SMOOTHNESS)
-    end
+if humanoid and hrp and humanoid.MoveDirection.Magnitude > 0.01 then
+local moveDir = humanoid.MoveDirection.Unit
+local targetVel = Vector3.new(moveDir.X * SPEED, hrp.Velocity.Y, moveDir.Z * SPEED)
+hrp.Velocity = hrp.Velocity:Lerp(targetVel, SMOOTHNESS)
+end
 end)
+
+-- Safety reapply every 0.2s
+task.spawn(function()
+while task.wait(0.2) do
+if humanoid and hrp and humanoid.MoveDirection.Magnitude > 0.01 then
+local moveDir = humanoid.MoveDirection.Unit
+local targetVel = Vector3.new(moveDir.X * SPEED, hrp.Velocity.Y, moveDir.Z * SPEED)
+hrp.Velocity = targetVel
+end
+end
+end)
+
