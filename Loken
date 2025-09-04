@@ -8,26 +8,34 @@ local character = player.Character or player.CharacterAdded:Wait()
 local humanoid = character:WaitForChild("Humanoid")
 local hrp = character:WaitForChild("HumanoidRootPart")
 
-local SPEED = 43
+local SPEED = 33 -- starting speed
+local MAX_SPEED = 43
 local SMOOTHNESS = 0.30 -- higher = smoother, less rubberband risk
+
+-- Speed ramp-up (fast countdown until 43)
+task.spawn(function()
+    while SPEED < MAX_SPEED do
+        SPEED += 1
+        task.wait(0.15) -- adjust this for faster/slower ramp-up
+    end
+end)
 
 -- Smooth velocity speed boost
 RunService.Heartbeat:Connect(function()
-if humanoid and hrp and humanoid.MoveDirection.Magnitude > 0.01 then
-local moveDir = humanoid.MoveDirection.Unit
-local targetVel = Vector3.new(moveDir.X * SPEED, hrp.Velocity.Y, moveDir.Z * SPEED)
-hrp.Velocity = hrp.Velocity:Lerp(targetVel, SMOOTHNESS)
-end
+    if humanoid and hrp and humanoid.MoveDirection.Magnitude > 0.01 then
+        local moveDir = humanoid.MoveDirection.Unit
+        local targetVel = Vector3.new(moveDir.X * SPEED, hrp.Velocity.Y, moveDir.Z * SPEED)
+        hrp.Velocity = hrp.Velocity:Lerp(targetVel, SMOOTHNESS)
+    end
 end)
 
 -- Safety reapply every 0.2s
 task.spawn(function()
-while task.wait(0.2) do
-if humanoid and hrp and humanoid.MoveDirection.Magnitude > 0.01 then
-local moveDir = humanoid.MoveDirection.Unit
-local targetVel = Vector3.new(moveDir.X * SPEED, hrp.Velocity.Y, moveDir.Z * SPEED)
-hrp.Velocity = targetVel
-end
-end
+    while task.wait(0.2) do
+        if humanoid and hrp and humanoid.MoveDirection.Magnitude > 0.01 then
+            local moveDir = humanoid.MoveDirection.Unit
+            local targetVel = Vector3.new(moveDir.X * SPEED, hrp.Velocity.Y, moveDir.Z * SPEED)
+            hrp.Velocity = targetVel
+        end
+    end
 end)
-
