@@ -1,0 +1,21 @@
+if not game:IsLoaded() then game.Loaded:Wait() end
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local hrp = character:WaitForChild("HumanoidRootPart")
+
+local SPEED = 44
+local SMOOTHNESS = 0.30 -- higher = smoother, less rubberband risk
+
+-- Smooth velocity speed boost (manual walking only)
+RunService.Heartbeat:Connect(function()
+    if humanoid and hrp and humanoid.MoveDirection.Magnitude > 0.01 then
+        local moveDir = humanoid.MoveDirection.Unit
+        local targetVel = Vector3.new(moveDir.X * SPEED, hrp.Velocity.Y, moveDir.Z * SPEED)
+        hrp.Velocity = hrp.Velocity:Lerp(targetVel, SMOOTHNESS)
+    end
+end)
