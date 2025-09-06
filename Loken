@@ -6,7 +6,7 @@ local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 
 -- CONFIG
-local jakcy = 49.9
+local jakcy = 49.8
 local running = true
 local renderConnection
 local lastVelocity = Vector3.new(0, 0, 0)
