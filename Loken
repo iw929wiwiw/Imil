@@ -1,50 +1,89 @@
-if not game:IsLoaded() then game.Loaded:Wait() end
+-- Speed control script (NO GUI / NO JumpPower)
+-- Starts automatically on execution
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-
 local player = Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoid = character:WaitForChild("Humanoid")
-local hrp = character:WaitForChild("HumanoidRootPart")
 
 -- CONFIG
-local BASE_SPEED = 33
-local MAX_SPEED = 44.7
-local SPEED = BASE_SPEED
-local RAMP_DELAY = 0.15 -- ramp-up step delay
-local SMOOTHNESS = 0.35 -- higher = smoother (safer)
+local jakcy = 50
+local running = true
+local renderConnection
+local lastVelocity = Vector3.new(0, 0, 0)
+local velocitySmoothness = 0.001
+local updateVariance = 0.001
+local lastUpdate = tick()
 
--- Ramp-up logic
-task.spawn(function()
-    while SPEED < MAX_SPEED do
-        SPEED += 1
-        task.wait(RAMP_DELAY)
+local function disconnectRender()
+    if renderConnection then
+        if renderConnection.Connected then
+            renderConnection:Disconnect()
+        end
+        renderConnection = nil
     end
-end)
+end
 
--- Core safe velocity logic
-RunService.Heartbeat:Connect(function()
-    if humanoid and hrp and humanoid.MoveDirection.Magnitude > 0.01 then
-        local moveDir = humanoid.MoveDirection.Unit
-        local vel = hrp.Velocity
-        -- Smooth interpolation toward target
-        local target = Vector3.new(moveDir.X * SPEED, vel.Y, moveDir.Z * SPEED)
-        hrp.Velocity = vel:Lerp(target, SMOOTHNESS)
-    end
-end)
+local function applyVelocity(char)
+    disconnectRender()
 
--- Extra safety refresh (keeps stable, avoids desync)
-task.spawn(function()
-    while task.wait(0.35) do
-        if humanoid and hrp and humanoid.MoveDirection.Magnitude > 0.01 then
-            local moveDir = humanoid.MoveDirection.Unit
-            local vel = hrp.Velocity
-            local target = Vector3.new(moveDir.X * SPEED, vel.Y, moveDir.Z * SPEED)
-            -- Apply only if different enough (anti-flag)
-            if (vel - target).Magnitude > 2 then
-                hrp.Velocity = target
+    local humanoid = char:WaitForChild("Humanoid")
+    local root = char:WaitForChild("HumanoidRootPart")
+
+    lastVelocity = Vector3.new(0, 0, 0)
+    lastUpdate = tick()
+
+    renderConnection = RunService.RenderStepped:Connect(function()
+        if not running or not humanoid or not root then return end
+
+        local currentTime = tick()
+        if currentTime - lastUpdate >= (0.1 + (math.random() * 2 - 1) * updateVariance) then
+            lastUpdate = currentTime
+
+            local direction = humanoid.MoveDirection or Vector3.new()
+            if direction.Magnitude > 0 then
+                local targetVelocity = Vector3.new(
+                    direction.X * jakcy,
+                    root.Velocity.Y,
+                    direction.Z * jakcy
+                )
+
+                local newVelocity = lastVelocity * velocitySmoothness + targetVelocity * (1 - velocitySmoothness)
+                lastVelocity = newVelocity
+
+                root.Velocity = newVelocity
+            else
+                lastVelocity = Vector3.new(0, root.Velocity.Y, 0)
             end
         end
+    end)
+end
+
+-- Start immediately
+if player.Character then
+    applyVelocity(player.Character)
+end
+
+player.CharacterAdded:Connect(function(char)
+    if running then
+        char:WaitForChild("Humanoid")
+        applyVelocity(char)
+    end
+end)
+
+player.CharacterRemoving:Connect(function()
+    disconnectRender()
+end)
+
+-- watchdog: reapply if connection dies
+spawn(function()
+    while true do
+        if running then
+            if (not renderConnection) or (renderConnection and not renderConnection.Connected) then
+                if player.Character then
+                    applyVelocity(player.Character)
+                end
+            end
+        end
+        wait(5 + math.random() * 3)
     end
 end)
